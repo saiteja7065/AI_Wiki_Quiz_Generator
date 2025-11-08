@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import Modal from './Modal';
 import QuizDisplay from './QuizDisplay';
 import apiService from '../services/api';
 
-function HistoryTab() {
+function HistoryTable() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -32,7 +31,6 @@ function HistoryTab() {
     setSelectedQuiz(null);
 
     try {
-      // Fetch full quiz details by ID (backend uses 'id', not '_id')
       const quizId = historyItem.id || historyItem._id;
       const quizData = await apiService.getQuizById(quizId);
       setSelectedQuiz(quizData);
@@ -88,7 +86,7 @@ function HistoryTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {history.map((item, index) => (
+                  {history.map((item) => (
                     <tr key={item.id || item._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="py-3 px-4 text-gray-600 font-mono text-sm">
                         {String(item.id || item._id).slice(-8)}
@@ -123,18 +121,35 @@ function HistoryTab() {
       </div>
 
       {/* Modal for viewing quiz */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        {loadingQuizDetails ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
-            <p className="mt-4 text-lg font-medium text-gray-700">Loading quiz details...</p>
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <h3 className="text-xl font-semibold">Quiz Details</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              {loadingQuizDetails ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
+                  <p className="mt-4 text-lg font-medium text-gray-700">Loading quiz details...</p>
+                </div>
+              ) : selectedQuiz ? (
+                <QuizDisplay quiz={selectedQuiz} viewMode={true} />
+              ) : null}
+            </div>
           </div>
-        ) : selectedQuiz ? (
-          <QuizDisplay quiz={selectedQuiz} />
-        ) : null}
-      </Modal>
+        </div>
+      )}
     </>
   );
 }
 
-export default HistoryTab;
+export default HistoryTable;

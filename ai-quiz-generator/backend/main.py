@@ -67,6 +67,23 @@ class QuizDetailResponse(BaseModel):
     sections: List[str]
     quiz: List[Dict[str, Any]]
     related_topics: List[str]
+    user_answers: Dict[str, str] = None
+
+class SubmitAnswersRequest(BaseModel):
+    """Request model for submitting quiz answers"""
+    quiz_id: int
+    answers: Dict[str, str]  # {"0": "Option A", "1": "Option B", ...}
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "quiz_id": 1,
+                "answers": {
+                    "0": "Guido van Rossum",
+                    "1": "1991"
+                }
+            }
+        }
 
 # Create database tables on startup
 @app.on_event("startup")
@@ -250,12 +267,21 @@ async def get_quiz_by_id(quiz_id: int, db: Session = Depends(get_db)):
             logger.error(f"Quiz data validation failed for ID {quiz_id}: {e}")
             raise HTTPException(status_code=500, detail=f"Quiz data is invalid for ID {quiz_id}")
         
+        # Deserialize user answers if they exist
+        user_answers = None
+        if quiz_record.user_answers:
+            try:
+                user_answers = json.loads(quiz_record.user_answers)
+            except json.JSONDecodeError:
+                logger.warning(f"Failed to deserialize user answers for quiz {quiz_id}")
+        
         # Return complete quiz data
         response_data = {
             "id": quiz_record.id,
             "url": quiz_record.url,
             "title": quiz_record.title,
             "date_generated": quiz_record.date_generated,
+            "user_answers": user_answers,
             **quiz_data  # Include deserialized quiz data
         }
         
@@ -313,6 +339,45 @@ async def get_stats(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
 
+# Endpoint 4: /api/submit-answers (POST)
+@app.post("/api/submit-answers")
+async def submit_answers(request: SubmitAnswersRequest, db: Session = Depends(get_db)):
+    """
+    Save user's answers for a quiz
+    
+    - Accepts quiz_id and answers dictionary
+    - Updates the quiz record with user's answers
+    - Returns success status
+    """
+    try:
+        logger.info(f"Saving answers for quiz ID: {request.quiz_id}")
+        
+        # Fetch quiz record by ID
+        quiz_record = db.query(Quiz).filter(Quiz.id == request.quiz_id).first()
+        
+        if not quiz_record:
+            logger.warning(f"Quiz with ID {request.quiz_id} not found")
+            raise HTTPException(status_code=404, detail=f"Quiz with ID {request.quiz_id} not found")
+        
+        # Save user answers as JSON string
+        quiz_record.user_answers = json.dumps(request.answers)
+        db.commit()
+        
+        logger.info(f"Successfully saved answers for quiz {request.quiz_id}")
+        
+        return {
+            "success": True,
+            "message": "Answers saved successfully",
+            "quiz_id": request.quiz_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error saving answers for quiz {request.quiz_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save answers: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     
@@ -320,7 +385,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=5000,
+        port=8000,
         reload=True,  # Enable auto-reload for development
         log_level="info"
     )

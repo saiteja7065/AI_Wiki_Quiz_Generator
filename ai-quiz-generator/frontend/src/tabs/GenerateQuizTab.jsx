@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import InteractiveQuiz from './InteractiveQuiz';
+import QuizDisplay from '../components/QuizDisplay';
 import apiService from '../services/api';
-import { validateWikipediaUrl } from '../utils/validation';
 
 function GenerateQuizTab() {
   const [url, setUrl] = useState('');
@@ -9,6 +8,35 @@ function GenerateQuizTab() {
   const [quiz, setQuiz] = useState(null);
   const [error, setError] = useState('');
   const [validationError, setValidationError] = useState('');
+
+  const validateWikipediaUrl = (url) => {
+    if (!url || url.trim() === '') {
+      return { isValid: false, error: 'URL is required' };
+    }
+
+    try {
+      const urlObj = new URL(url);
+      const isWikipedia = urlObj.hostname.includes('wikipedia.org');
+      
+      if (!isWikipedia) {
+        return {
+          isValid: false,
+          error: 'Please enter a valid Wikipedia URL (e.g., https://en.wikipedia.org/wiki/...)',
+        };
+      }
+
+      if (!urlObj.pathname.includes('/wiki/')) {
+        return {
+          isValid: false,
+          error: 'Please enter a Wikipedia article URL (must contain /wiki/)',
+        };
+      }
+
+      return { isValid: true, error: null };
+    } catch (e) {
+      return { isValid: false, error: 'Please enter a valid URL' };
+    }
+  };
 
   const handleUrlChange = (e) => {
     const newUrl = e.target.value;
@@ -20,7 +48,6 @@ function GenerateQuizTab() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate URL
     const validation = validateWikipediaUrl(url);
     if (!validation.isValid) {
       setValidationError(validation.error);
@@ -35,7 +62,7 @@ function GenerateQuizTab() {
     try {
       const data = await apiService.generateQuiz(url);
       setQuiz(data);
-      setUrl(''); // Clear input on success
+      setUrl('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,7 +72,6 @@ function GenerateQuizTab() {
 
   return (
     <div className="space-y-6">
-      {/* URL Input Form */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">
           Generate Quiz from Wikipedia
@@ -99,7 +125,6 @@ function GenerateQuizTab() {
         </form>
       </div>
 
-      {/* Loading State */}
       {loading && (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
@@ -108,7 +133,6 @@ function GenerateQuizTab() {
         </div>
       )}
 
-      {/* Error State */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800">
@@ -117,8 +141,7 @@ function GenerateQuizTab() {
         </div>
       )}
 
-      {/* Interactive Quiz Display */}
-      {quiz && <InteractiveQuiz quiz={quiz} />}
+      {quiz && <QuizDisplay quiz={quiz} />}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import GenerateQuizTab from './components/GenerateQuizTab';
-import HistoryTab from './components/HistoryTab';
+import GenerateQuizTab from './tabs/GenerateQuizTab';
+import HistoryTab from './tabs/HistoryTab';
 
 function App() {
   const [activeTab, setActiveTab] = useState('generate');

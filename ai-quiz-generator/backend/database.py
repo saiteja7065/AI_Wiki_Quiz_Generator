@@ -39,6 +39,8 @@ class Quiz(Base):
     # Falls back to Text for SQLite
     scraped_content = Column(LONGTEXT if "mysql" in DATABASE_URL else Text, nullable=True)
     full_quiz_data = Column(LONGTEXT if "mysql" in DATABASE_URL else Text, nullable=False)
+    # Store user's answers as JSON string (e.g., {"0": "Option A", "1": "Option B"})
+    user_answers = Column(Text, nullable=True)
     
     def __repr__(self):
         return f"<Quiz(id={self.id}, title='{self.title}', url='{self.url}')>"

@@ -1,0 +1,39 @@
+# Test Wikipedia URLs for AI Quiz Generator
+
+## Successfully Tested URLs
+
+1. Alan Turing
+   https://en.wikipedia.org/wiki/Alan_Turing
+   - Topics: Computer Science, Cryptography, World War II
+   - Difficulty: Medium
+   - Questions: 5-10
+
+2. Artificial Intelligence
+   https://en.wikipedia.org/wiki/Artificial_intelligence
+   - Topics: Machine Learning, Neural Networks, AI History
+   - Difficulty: Medium to Hard
+   - Questions: 7-10
+
+3. Python (Programming Language)
+   https://en.wikipedia.org/wiki/Python_(programming_language)
+   - Topics: Programming, Software Development, Guido van Rossum
+   - Difficulty: Easy to Medium
+   - Questions: 5-8
+
+4. Machine Learning
+   https://en.wikipedia.org/wiki/Machine_learning
+   - Topics: AI, Data Science, Algorithms
+   - Difficulty: Medium to Hard
+   - Questions: 6-10
+
+5. World War II
+   https://en.wikipedia.org/wiki/World_War_II
+   - Topics: History, Military, Global Conflicts
+   - Difficulty: Medium
+   - Questions: 8-10
+
+## URL Format Requirements
+- Must be a valid Wikipedia URL
+- Format: https://en.wikipedia.org/wiki/Article_Name
+- Article must have substantial content
+- Avoid disambiguation pages

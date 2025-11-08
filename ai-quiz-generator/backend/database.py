@@ -4,22 +4,49 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.mysql import LONGTEXT
 from datetime import datetime
 import os
+import sys
 
-# Database URL - Using MySQL
-# Format: mysql+pymysql://username:password@host:port/database_name
-# For local development, you can also use SQLite as fallback
+# Database URL - Using MySQL/PostgreSQL/SQLite
+# Format: 
+#   PostgreSQL: postgresql://username:password@host:port/database_name
+#   MySQL: mysql+pymysql://username:password@host:port/database_name
+#   SQLite: sqlite:///./quiz_history.db
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./quiz_history.db")
 
-# Create SQLAlchemy engine with MySQL-specific settings
-if "mysql" in DATABASE_URL:
-    engine = create_engine(
-        DATABASE_URL,
-        pool_pre_ping=True,  # Verify connections before use
-        pool_recycle=300,    # Recycle connections every 5 minutes
-        echo=False           # Set to True for SQL debugging
-    )
-else:
-    engine = create_engine(DATABASE_URL)
+# Validate DATABASE_URL
+if not DATABASE_URL or DATABASE_URL.strip() == "":
+    print("ERROR: DATABASE_URL environment variable is not set!")
+    print("Please set DATABASE_URL in your Render environment variables.")
+    print("Example: postgresql://user:pass@host:port/db")
+    sys.exit(1)
+
+# Log database type (without exposing credentials)
+db_type = DATABASE_URL.split("://")[0] if "://" in DATABASE_URL else "unknown"
+print(f"Connecting to {db_type} database...")
+
+# Create SQLAlchemy engine with appropriate settings
+try:
+    if "mysql" in DATABASE_URL:
+        engine = create_engine(
+            DATABASE_URL,
+            pool_pre_ping=True,  # Verify connections before use
+            pool_recycle=300,    # Recycle connections every 5 minutes
+            echo=False           # Set to True for SQL debugging
+        )
+    elif "postgresql" in DATABASE_URL:
+        engine = create_engine(
+            DATABASE_URL,
+            pool_pre_ping=True,
+            pool_recycle=300,
+            echo=False
+        )
+    else:
+        engine = create_engine(DATABASE_URL)
+    print(f"Database engine created successfully for {db_type}")
+except Exception as e:
+    print(f"ERROR: Failed to create database engine: {e}")
+    print(f"DATABASE_URL format: {db_type}://...")
+    sys.exit(1)
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

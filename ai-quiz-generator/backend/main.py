@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import json
 import logging
 from datetime import datetime
@@ -31,7 +31,14 @@ app = FastAPI(
 # Set up CORS middleware to allow React frontend to communicate
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"],  # React dev servers
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173", 
+        "http://localhost:5174",
+        "http://127.0.0.1:3000", 
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174"
+    ],  # React dev servers
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers
@@ -67,7 +74,7 @@ class QuizDetailResponse(BaseModel):
     sections: List[str]
     quiz: List[Dict[str, Any]]
     related_topics: List[str]
-    user_answers: Dict[str, str] = None
+    user_answers: Optional[Dict[str, str]] = None
 
 class SubmitAnswersRequest(BaseModel):
     """Request model for submitting quiz answers"""

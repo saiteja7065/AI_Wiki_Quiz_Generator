@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+        .success {
+            background: #10b98120;
+            border-color: #10b981;
+        }
+        .error {
+            background: #ff006e20;
+            border-color: #ff006e;
+        }
+        button {
+            background: linear-gradient(to right, #6366f1, #d946ef);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        pre {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔌 Backend Connection Test</h1>
+    <p>Testing connection to: <strong>http://localhost:8000</strong></p>
+    
+    <div>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <button onclick="testHistory()">Test History Endpoint</button>
+        <button onclick="testCORS()">Test CORS</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const resultsDiv = document.getElementById('results');
+
+        function addResult(title, success, data) {
+            const div = document.createElement('div');
+            div.className = `test-result ${success ? 'success' : 'error'}`;
+            div.innerHTML = `
+                <h3>${success ? '✅' : '❌'} ${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            resultsDiv.appendChild(div);
+        }
+
+        async function testHealth() {
+            resultsDiv.innerHTML = '';
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                addResult('Health Check', response.ok, data);
+            } catch (error) {
+                addResult('Health Check', false, { error: error.message });
+            }
+        }
+
+        async function testHistory() {
+            resultsDiv.innerHTML = '';
+            try {
+                const response = await fetch(`${API_URL}/api/history`);
+                const data = await response.json();
+                addResult('History Endpoint', response.ok, {
+                    status: response.status,
+                    count: data.length,
+                    data: data.slice(0, 2) // Show first 2 items
+                });
+            } catch (error) {
+                addResult('History Endpoint', false, { error: error.message });
+            }
+        }
+
+        async function testCORS() {
+            resultsDiv.innerHTML = '';
+            try {
+                const response = await fetch(`${API_URL}/api/history`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                const corsHeaders = {
+                    'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+                    'access-control-allow-credentials': response.headers.get('access-control-allow-credentials'),
+                    'access-control-allow-methods': response.headers.get('access-control-allow-methods'),
+                };
+                addResult('CORS Headers', response.ok, corsHeaders);
+            } catch (error) {
+                addResult('CORS Test', false, { error: error.message });
+            }
+        }
+
+        // Auto-run tests on load
+        window.onload = () => {
+            testHealth();
+        };
+    </script>
+</body>
+</html>

@@ -37,8 +37,10 @@ app.add_middleware(
         "http://localhost:5174",
         "http://127.0.0.1:3000", 
         "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174"
-    ],  # React dev servers
+        "http://127.0.0.1:5174",
+        "https://ai-wiki-quiz-generator-sis.vercel.app",  # Vercel deployment
+        "https://*.vercel.app"  # Allow all Vercel preview deployments
+    ],  # React dev servers and production
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers

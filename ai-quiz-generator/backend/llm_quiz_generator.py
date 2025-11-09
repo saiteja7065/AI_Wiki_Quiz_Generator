@@ -4,11 +4,11 @@ LLM Integration using Gemini model for quiz generation
 """
 import os
 from typing import Dict, Any
-import google.generativeai as genai
 import json
 from models import QuizOutput
 from dotenv import load_dotenv
 import logging
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Load environment variables
 load_dotenv()
@@ -19,22 +19,24 @@ logger = logging.getLogger(__name__)
 
 class QuizGenerator:
     """
-    LLM-powered quiz generator using Gemini and LangChain
+    LLM-powered quiz generator using Gemini via LangChain
     """
     
     def __init__(self):
-        """Initialize the Gemini model"""
+        """Initialize the Gemini model via LangChain"""
         self.api_key = os.getenv("GEMINI_API_KEY")
         if not self.api_key or self.api_key == "YOUR_API_KEY_HERE":
             raise ValueError("GEMINI_API_KEY not found in environment variables. Please set it in .env file.")
         
-        # Configure Gemini API
-        genai.configure(api_key=self.api_key)
+        # Initialize Gemini model via LangChain
+        self.model = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash-exp",
+            google_api_key=self.api_key,
+            temperature=0.7,
+            convert_system_message_to_human=True
+        )
         
-        # Initialize Gemini model  
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
-        
-        logger.info("QuizGenerator initialized successfully with Gemini model")
+        logger.info("QuizGenerator initialized successfully with Gemini model via LangChain")
     
     def _create_prompt(self, article_text: str, article_title: str) -> str:
         """
@@ -106,11 +108,11 @@ Return ONLY the JSON, no other text.
             # Create prompt
             prompt = self._create_prompt(article_text, article_title)
             
-            # Generate content using Gemini
-            response = self.model.generate_content(prompt)
+            # Generate content using Gemini via LangChain
+            response = self.model.invoke(prompt)
             
             # Extract text from response
-            response_text = response.text.strip()
+            response_text = response.content.strip()
             
             # Parse JSON response
             try:
@@ -154,8 +156,8 @@ Return ONLY the JSON, no other text.
             bool: True if connection successful
         """
         try:
-            test_response = self.model.generate_content("Test connection. Respond with 'OK'.")
-            if test_response and test_response.text:
+            test_response = self.model.invoke("Test connection. Respond with 'OK'.")
+            if test_response and test_response.content:
                 logger.info("✅ Gemini API connection test successful")
                 return True
             else:
